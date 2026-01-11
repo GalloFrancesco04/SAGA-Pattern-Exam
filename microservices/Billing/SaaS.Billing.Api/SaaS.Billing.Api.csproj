@@ -15,7 +15,7 @@
     <ProjectReference Include="..\SaaS.Billing.Business\SaaS.Billing.Business.csproj" />
     <ProjectReference Include="..\SaaS.Billing.Shared\SaaS.Billing.Shared.csproj" />
     <ProjectReference Include="..\SaaS.Billing.Repository\SaaS.Billing.Repository.csproj" />
-    <ProjectReference Include="..\..\libraries\SaaS.Utility.Kafka\SaaS.Utility.Kafka.csproj" />
+    <ProjectReference Include="..\..\..\libraries\SaaS.Utility.Kafka\SaaS.Utility.Kafka.csproj" />
   </ItemGroup>
 
 </Project>

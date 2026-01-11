@@ -1,9 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SaaS.Orchestrator.Repository\SaaS.Orchestrator.Repository.csproj" />
+    <ProjectReference Include="..\SaaS.Orchestrator.Shared\SaaS.Orchestrator.Shared.csproj" />
+  </ItemGroup>
 
 </Project>
