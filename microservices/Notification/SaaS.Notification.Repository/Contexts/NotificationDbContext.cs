@@ -1,31 +1,32 @@
 using Microsoft.EntityFrameworkCore;
-using SaaS.Billing.Shared.Entities;
+using SaaS.Notification.Shared.Entities;
 
-namespace SaaS.Billing.Repository.Contexts;
+namespace SaaS.Notification.Repository.Contexts;
 
-public class BillingDbContext : DbContext
+public class NotificationDbContext : DbContext
 {
-    public BillingDbContext(DbContextOptions<BillingDbContext> options) : base(options)
+    public NotificationDbContext(DbContextOptions<NotificationDbContext> options) : base(options)
     {
     }
 
-    public DbSet<Subscription> Subscriptions { get; set; }
+    public DbSet<EmailLog> EmailLogs { get; set; }
     public DbSet<TransactionalOutboxMessage> OutboxMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Subscription
-        modelBuilder.Entity<Subscription>(entity =>
+        // EmailLog
+        modelBuilder.Entity<EmailLog>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.CustomerId).IsRequired();
-            entity.Property(e => e.PlanId).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.SubscriptionId).IsRequired();
+            entity.Property(e => e.RecipientEmail).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.Subject).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Body).IsRequired();
             entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
         });
 
         // TransactionalOutboxMessage
