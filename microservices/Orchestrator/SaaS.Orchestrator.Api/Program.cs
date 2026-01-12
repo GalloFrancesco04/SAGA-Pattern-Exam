@@ -4,7 +4,9 @@ using SaaS.Orchestrator.Repository.Contexts;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHealthChecks();
 builder.Services.AddDbContext<OrchestratorDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("OrchestratorDb")));
 
