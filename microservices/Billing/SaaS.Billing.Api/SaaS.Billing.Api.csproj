@@ -12,6 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <ProjectReference Include="..\SaaS.Billing.Business\SaaS.Billing.Business.csproj" />
     <ProjectReference Include="..\SaaS.Billing.Shared\SaaS.Billing.Shared.csproj" />
     <ProjectReference Include="..\SaaS.Billing.Repository\SaaS.Billing.Repository.csproj" />

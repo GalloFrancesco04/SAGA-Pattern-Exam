@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SaaS.Billing.Repository.Contexts;
 using SaaS.Billing.Shared.Entities;
@@ -20,24 +21,64 @@ public class SubscriptionService : ISubscriptionService
             Id = Guid.NewGuid(),
             CustomerId = customerId,
             PlanId = planId,
-            Status = "pending",
+            Status = "active",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        // TODO: Add to DbContext and save (next step)
-        return await Task.FromResult(subscription);
+        var outboxMessage = new TransactionalOutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            AggregateId = subscription.Id,
+            EventType = "SubscriptionCreated",
+            Payload = JsonSerializer.Serialize(subscription),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _context.Subscriptions.AddAsync(subscription, cancellationToken);
+        await _context.OutboxMessages.AddAsync(outboxMessage, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return subscription;
     }
 
     public async Task<Subscription?> GetSubscriptionAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
     {
-        // TODO: Query from DbContext (next step)
-        return await Task.FromResult<Subscription?>(null);
+        return await _context.Subscriptions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == subscriptionId, cancellationToken);
     }
 
     public async Task<bool> CancelSubscriptionAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
     {
-        // TODO: Update subscription status to "cancelled" (next step)
-        return await Task.FromResult(false);
+        var subscription = await _context.Subscriptions
+            .FirstOrDefaultAsync(s => s.Id == subscriptionId, cancellationToken);
+
+        if (subscription == null)
+        {
+            return false;
+        }
+
+        if (string.Equals(subscription.Status, "cancelled", StringComparison.OrdinalIgnoreCase))
+        {
+            return true; // idempotent cancel
+        }
+
+        subscription.Status = "cancelled";
+        subscription.UpdatedAt = DateTime.UtcNow;
+
+        var outboxMessage = new TransactionalOutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            AggregateId = subscription.Id,
+            EventType = "SubscriptionCancelled",
+            Payload = JsonSerializer.Serialize(subscription),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.OutboxMessages.Add(outboxMessage);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return true;
     }
 }
