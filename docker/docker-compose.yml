@@ -10,10 +10,11 @@ services:
     volumes:
       - "mssql-server:/var/opt/mssql"
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "p4ssw0rD", "-Q", "SELECT 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "127.0.0.1", "-U", "sa", "-P", "p4ssw0rD", "-Q", "SELECT 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
 
   adminer:
     image: adminer:4.8.1
@@ -23,8 +24,7 @@ services:
       TZ: Europe/Rome
       ADMINER_DEFAULT_SERVER: mssql-server
     depends_on:
-      mssql-server:
-        condition: service_healthy
+      - mssql-server
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.7.0
@@ -65,10 +65,8 @@ services:
     image: saas-orchestrator:latest
     container_name: saas-orchestrator
     depends_on:
-      mssql-server:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
+      - mssql-server
+      - kafka
     ports:
       - "5013:8080"
     environment:
@@ -90,10 +88,8 @@ services:
     image: saas-billing:latest
     container_name: saas-billing
     depends_on:
-      mssql-server:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
+      - mssql-server
+      - kafka
     ports:
       - "5037:8080"
     environment:
@@ -115,10 +111,8 @@ services:
     image: saas-provisioning:latest
     container_name: saas-provisioning
     depends_on:
-      mssql-server:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
+      - mssql-server
+      - kafka
     ports:
       - "5148:8080"
     environment:
@@ -140,10 +134,8 @@ services:
     image: saas-notification:latest
     container_name: saas-notification
     depends_on:
-      mssql-server:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
+      - mssql-server
+      - kafka
     ports:
       - "5214:8080"
     environment:
