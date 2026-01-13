@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SaaS.Notification.Repository.Contexts;
 using SaaS.Notification.Shared;
 using SaaS.Notification.Shared.Entities;
-using SaaS.Utility.Kafka.Abstractions.Clients;
+using SaaS.Utility.Kafka.Abstractions;
 using SaaS.Utility.Kafka.Services;
 
 namespace SaaS.Notification.Api.Services;
@@ -16,42 +16,37 @@ public class NotificationProducerService : ProducerService<TransactionalOutboxMe
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public NotificationProducerService(
-        IServiceScopeFactory serviceScopeFactory,
-        IProducerClient producerClient)
-        : base(producerClient)
+        IProducerClient<string, string> producerClient,
+        ILogger<NotificationProducerService> logger,
+        IServiceScopeFactory serviceScopeFactory)
+        : base(producerClient, logger, TimeSpan.FromSeconds(5))
     {
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    protected override string GetTopic(TransactionalOutboxMessage message)
-    {
-        return message.EventType switch
-        {
-            "EmailSent" => NotificationTopicNames.EmailSent,
-            _ => throw new InvalidOperationException($"Unknown event type: {message.EventType}")
-        };
-    }
-
-    protected override string GetKey(TransactionalOutboxMessage message)
-    {
-        return message.AggregateId.ToString();
-    }
-
-    protected override string GetValue(TransactionalOutboxMessage message)
-    {
-        return message.Payload;
-    }
-
-    protected override async Task<IEnumerable<TransactionalOutboxMessage>> GetMessagesAsync(CancellationToken cancellationToken)
+    protected override async Task<IEnumerable<ProducerMessage<TransactionalOutboxMessage>>> GetMessagesAsync(CancellationToken cancellationToken)
     {
         using var scope = _serviceScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
 
-        return await dbContext.OutboxMessages
+        var pending = await dbContext.OutboxMessages
+            .AsNoTracking()
             .Where(m => !m.IsProduced)
             .OrderBy(m => m.CreatedAt)
-            .Take(100)
+            .Take(50)
             .ToListAsync(cancellationToken);
+
+        return pending.Select(m => new ProducerMessage<TransactionalOutboxMessage>
+        {
+            Topic = m.EventType switch
+            {
+                "EmailSent" => NotificationTopicNames.EmailSent,
+                _ => throw new InvalidOperationException($"Unknown event type: {m.EventType}")
+            },
+            Key = m.AggregateId.ToString(),
+            Value = m.Payload,
+            Payload = m
+        });
     }
 
     protected override async Task MarkAsProducedAsync(TransactionalOutboxMessage message, CancellationToken cancellationToken)

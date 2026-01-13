@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SaaS.Notification.Api.Services;
 using SaaS.Notification.Business.Services;
 using SaaS.Notification.Repository.Contexts;
-using SaaS.Utility.Kafka.Extensions;
+using SaaS.Utility.Kafka.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
