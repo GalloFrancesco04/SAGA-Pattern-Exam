@@ -75,9 +75,9 @@ public static class ServiceCollectionExtensions
         });
 
         // Register client wrappers
-        services.AddScoped<IConsumerClient<string, string>, KafkaConsumerClient>();
-        services.AddScoped<IProducerClient<string, string>, KafkaProducerClient>();
-        services.AddScoped<IAdministatorClient, KafkaAdministatorClient>();
+        services.AddSingleton<IConsumerClient<string, string>, KafkaConsumerClient>();
+        services.AddSingleton<IProducerClient<string, string>, KafkaProducerClient>();
+        services.AddSingleton<IAdministatorClient, KafkaAdministatorClient>();
 
         return services;
     }

@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libraries\SaaS.Utility.Kafka\SaaS.Utility.Kafka.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -2,6 +2,8 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SaaS.Billing.Repository.Contexts;
 using SaaS.Billing.Shared.Entities;
+using SaaS.Billing.Shared.Messages;
+using SaaS.Billing.Shared;
 
 namespace SaaS.Billing.Business.Services;
 
@@ -26,12 +28,21 @@ public class SubscriptionService : ISubscriptionService
             UpdatedAt = DateTime.UtcNow
         };
 
+        var createdEvent = new SubscriptionCreatedEvent
+        {
+            SubscriptionId = subscription.Id,
+            CustomerId = subscription.CustomerId,
+            PlanId = subscription.PlanId,
+            Status = subscription.Status,
+            CreatedAt = subscription.CreatedAt
+        };
+
         var outboxMessage = new TransactionalOutboxMessage
         {
             Id = Guid.NewGuid(),
             AggregateId = subscription.Id,
-            EventType = "SubscriptionCreated",
-            Payload = JsonSerializer.Serialize(subscription),
+            EventType = BillingTopicNames.SubscriptionCreated,
+            Payload = JsonSerializer.Serialize(createdEvent),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -67,12 +78,21 @@ public class SubscriptionService : ISubscriptionService
         subscription.Status = "cancelled";
         subscription.UpdatedAt = DateTime.UtcNow;
 
+        var cancelledEvent = new SubscriptionCancelledEvent
+        {
+            SubscriptionId = subscription.Id,
+            CustomerId = subscription.CustomerId,
+            PlanId = subscription.PlanId,
+            Status = subscription.Status,
+            CancelledAt = subscription.UpdatedAt
+        };
+
         var outboxMessage = new TransactionalOutboxMessage
         {
             Id = Guid.NewGuid(),
             AggregateId = subscription.Id,
-            EventType = "SubscriptionCancelled",
-            Payload = JsonSerializer.Serialize(subscription),
+            EventType = BillingTopicNames.SubscriptionCancelled,
+            Payload = JsonSerializer.Serialize(cancelledEvent),
             CreatedAt = DateTime.UtcNow
         };
 
