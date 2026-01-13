@@ -62,7 +62,7 @@ public class TenantsController : ControllerBase
                 CreatedAt = tenant.CreatedAt
             };
 
-            return CreatedAtAction(nameof(GetAsync), new { id = tenant.Id }, response);
+            return CreatedAtAction("Get", new { id = tenant.Id }, response);
         }
         catch (InvalidOperationException ex)
         {
