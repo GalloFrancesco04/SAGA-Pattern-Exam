@@ -59,7 +59,7 @@ public class SagasController : ControllerBase
         );
 
         return CreatedAtAction(
-            nameof(GetSagaStatusAsync),
+            "GetSagaStatus",
             new { id = sagaId },
             response
         );
