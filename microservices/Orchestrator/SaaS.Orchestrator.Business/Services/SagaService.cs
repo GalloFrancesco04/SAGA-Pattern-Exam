@@ -80,7 +80,7 @@ public class SagaService : ISagaService
         // Get the most recent Pending saga for this customer
         return await _context.SagaInstances
             .AsNoTracking()
-            .Where(s => s.CustomerId == customerId && s.Status == SagaStatus.Pending)
+            .Where(s => s.CustomerId == customerId && s.Status == "Pending")
             .OrderByDescending(s => s.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
     }
