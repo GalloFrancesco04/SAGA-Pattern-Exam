@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using SaaS.Provisioning.Repository.Contexts;
 using SaaS.Provisioning.Business.Services;
+using SaaS.Provisioning.Api.Services;
+using SaaS.Utility.Kafka.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,13 @@ builder.Services.AddDbContext<ProvisioningDbContext>(options =>
 
 // Register business services
 builder.Services.AddScoped<ITenantService, TenantService>();
+
+// Register Kafka clients
+builder.Services.AddKafkaClients(options =>
+    builder.Configuration.GetSection("Kafka").Bind(options));
+
+// Register background services
+builder.Services.AddHostedService<ProvisioningProducerService>();
 
 var app = builder.Build();
 
