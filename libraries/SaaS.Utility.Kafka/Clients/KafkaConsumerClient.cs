@@ -94,11 +94,6 @@ public class KafkaConsumerClient : IConsumerClient<string, string>
 
                     _consumer.Commit(consumeResult);
                 }
-                catch (Confluent.Kafka.TopicAuthorizationException ex) when (!cancellationToken.IsCancellationRequested)
-                {
-                    _logger.LogWarning("Topic authorization error: {Error}. Retrying in 5 seconds...", ex.Message);
-                    await Task.Delay(5000, cancellationToken);
-                }
                 catch (Confluent.Kafka.ConsumeException ex) when (ex.Message.Contains("Unknown topic") && !cancellationToken.IsCancellationRequested)
                 {
                     _logger.LogWarning("Topic not available yet: {Error}. Retrying in 5 seconds...", ex.Message);
