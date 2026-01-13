@@ -1,0 +1,24 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.EntityFrameworkCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "ProvisioningDb": "Server=mssql-server,1433;Database=ProvisioningDb;User Id=sa;Password=p4ssw0rD;TrustServerCertificate=true"
+  },
+  "Kafka": {
+    "BootstrapServers": "kafka:29092",
+    "ProducerId": "saas-provisioning",
+    "ConsumerId": "saas-provisioning-consumer",
+    "GroupId": "saas-provisioning-group",
+    "Topics": {
+      "ProvisionTenant": "saas-provision-tenant",
+      "TenantProvisioned": "saas-tenant-provisioned",
+      "TenantProvisioningFailed": "saas-tenant-provisioning-failed",
+      "DeprovisionTenant": "saas-deprovision-tenant",
+      "TenantDeprovisioned": "saas-tenant-deprovisioned"
+    }
+  }
+}

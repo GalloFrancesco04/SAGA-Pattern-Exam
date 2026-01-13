@@ -1,0 +1,23 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.EntityFrameworkCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "BillingDb": "Server=mssql-server,1433;Database=BillingDb;User Id=sa;Password=p4ssw0rD;TrustServerCertificate=true"
+  },
+  "Kafka": {
+    "BootstrapServers": "kafka:29092",
+    "ProducerId": "saas-billing",
+    "ConsumerId": "saas-billing-consumer",
+    "GroupId": "saas-billing-group",
+    "Topics": {
+      "CreateSubscription": "saas-create-subscription",
+      "SubscriptionCreated": "saas-subscription-created",
+      "CancelSubscription": "saas-cancel-subscription",
+      "SubscriptionCancelled": "saas-subscription-cancelled"
+    }
+  }
+}

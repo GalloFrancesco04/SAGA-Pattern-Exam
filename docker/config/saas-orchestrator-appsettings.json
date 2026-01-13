@@ -1,0 +1,25 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.EntityFrameworkCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "OrchestratorDb": "Server=mssql-server,1433;Database=OrchestratorDb;User Id=sa;Password=p4ssw0rD;TrustServerCertificate=true"
+  },
+  "Kafka": {
+    "BootstrapServers": "kafka:29092",
+    "ProducerId": "saas-orchestrator",
+    "ConsumerId": "saas-orchestrator-consumer",
+    "GroupId": "saas-orchestrator-group",
+    "Topics": {
+      "SubscriptionCreated": "saas-subscription-created",
+      "TenantProvisioned": "saas-tenant-provisioned",
+      "TenantProvisioningFailed": "saas-tenant-provisioning-failed",
+      "EmailSent": "saas-email-sent",
+      "SubscriptionCancelled": "saas-subscription-cancelled",
+      "TenantDeprovisioned": "saas-tenant-deprovisioned"
+    }
+  }
+}
