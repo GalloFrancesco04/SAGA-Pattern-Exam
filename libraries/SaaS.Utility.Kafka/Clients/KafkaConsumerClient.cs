@@ -65,32 +65,45 @@ public class KafkaConsumerClient : IConsumerClient<string, string>
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var consumeResult = _consumer.Consume(cancellationToken);
-
-                if (consumeResult == null)
-                    continue;
-
-                if (consumeResult.IsPartitionEOF)
+                try
                 {
-                    _logger.LogDebug("Reached end of partition {Partition} on topic {Topic}", consumeResult.Partition, consumeResult.Topic);
-                    continue;
-                }
+                    var consumeResult = _consumer.Consume(cancellationToken);
 
-                _logger.LogInformation("Received message from topic {Topic}: Key={Key}", consumeResult.Topic, consumeResult.Message.Key);
+                    if (consumeResult == null)
+                        continue;
 
-                var consumedMessage = new ConsumedMessage<string, string>
-                {
-                    Topic = consumeResult.Topic,
-                    Message = new Abstractions.Message<string, string>
+                    if (consumeResult.IsPartitionEOF)
                     {
-                        Key = consumeResult.Message.Key,
-                        Value = consumeResult.Message.Value
+                        _logger.LogDebug("Reached end of partition {Partition} on topic {Topic}", consumeResult.Partition, consumeResult.Topic);
+                        continue;
                     }
-                };
 
-                await onMessageReceived(consumedMessage);
+                    _logger.LogInformation("Received message from topic {Topic}: Key={Key}", consumeResult.Topic, consumeResult.Message.Key);
 
-                _consumer.Commit(consumeResult);
+                    var consumedMessage = new ConsumedMessage<string, string>
+                    {
+                        Topic = consumeResult.Topic,
+                        Message = new Abstractions.Message<string, string>
+                        {
+                            Key = consumeResult.Message.Key,
+                            Value = consumeResult.Message.Value
+                        }
+                    };
+
+                    await onMessageReceived(consumedMessage);
+
+                    _consumer.Commit(consumeResult);
+                }
+                catch (Confluent.Kafka.TopicAuthorizationException ex) when (!cancellationToken.IsCancellationRequested)
+                {
+                    _logger.LogWarning("Topic authorization error: {Error}. Retrying in 5 seconds...", ex.Message);
+                    await Task.Delay(5000, cancellationToken);
+                }
+                catch (Confluent.Kafka.ConsumeException ex) when (ex.Message.Contains("Unknown topic") && !cancellationToken.IsCancellationRequested)
+                {
+                    _logger.LogWarning("Topic not available yet: {Error}. Retrying in 5 seconds...", ex.Message);
+                    await Task.Delay(5000, cancellationToken);
+                }
             }
         }
         catch (OperationCanceledException)
