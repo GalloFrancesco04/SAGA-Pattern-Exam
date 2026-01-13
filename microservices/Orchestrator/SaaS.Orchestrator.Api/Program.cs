@@ -23,6 +23,22 @@ builder.Services.AddHostedService<OrchestratorConsumerService>();
 
 var app = builder.Build();
 
+// Ensure database is created
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<OrchestratorDbContext>();
+    try
+    {
+        await dbContext.Database.EnsureCreatedAsync();
+    }
+    catch (Exception ex)
+    {
+        // Log but don't fail startup
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning(ex, "Failed to ensure database creation");
+    }
+}
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
