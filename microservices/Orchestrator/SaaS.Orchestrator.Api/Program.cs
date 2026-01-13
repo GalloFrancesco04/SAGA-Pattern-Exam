@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using SaaS.Orchestrator.Api.Services;
 using SaaS.Orchestrator.Business.Services;
 using SaaS.Orchestrator.Repository.Contexts;
+using SaaS.Utility.Kafka.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,8 @@ builder.Services.AddDbContext<OrchestratorDbContext>(options =>
         b => b.MigrationsAssembly("SaaS.Orchestrator.Api")
     ));
 builder.Services.AddScoped<ISagaService, SagaService>();
+builder.Services.AddKafkaClients(options => builder.Configuration.GetSection("Kafka").Bind(options));
+builder.Services.AddHostedService<OrchestratorProducerService>();
 
 var app = builder.Build();
 
