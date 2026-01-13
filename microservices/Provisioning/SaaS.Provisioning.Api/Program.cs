@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SaaS.Provisioning.Repository.Contexts;
+using SaaS.Provisioning.Business.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,8 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
+builder.Services.AddControllers();
 builder.Services.AddDbContext<ProvisioningDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ProvisioningDb")));
+
+// Register business services
+builder.Services.AddScoped<ITenantService, TenantService>();
 
 var app = builder.Build();
 
@@ -20,5 +25,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthChecks("/health");
+app.MapControllers();
 
 app.Run();
