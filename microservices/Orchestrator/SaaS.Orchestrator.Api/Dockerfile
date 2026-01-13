@@ -6,7 +6,7 @@ WORKDIR /src
 COPY . .
 
 # Restore and build
-RUN dotnet restore "EsempiDotNet.sln"
+RUN dotnet restore "SaaS.Solution.sln"
 RUN dotnet build "microservices/Orchestrator/SaaS.Orchestrator.Api/SaaS.Orchestrator.Api.csproj" -c Release -o /app/build
 
 # Publish stage
