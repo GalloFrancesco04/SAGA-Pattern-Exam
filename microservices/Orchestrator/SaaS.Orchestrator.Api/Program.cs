@@ -10,7 +10,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 builder.Services.AddDbContext<OrchestratorDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("OrchestratorDb")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("OrchestratorDb"),
+        b => b.MigrationsAssembly("SaaS.Orchestrator.Api")
+    ));
 builder.Services.AddScoped<ISagaService, SagaService>();
 
 var app = builder.Build();
