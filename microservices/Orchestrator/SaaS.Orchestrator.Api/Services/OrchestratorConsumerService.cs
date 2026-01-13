@@ -126,6 +126,7 @@ public class OrchestratorConsumerService : BackgroundService
 
     /// <summary>
     /// Handle SubscriptionCreatedEvent from BillingService - This is the PIVOT point.
+    /// Event format: { "SubscriptionId": "...", "CustomerId": "...", "PlanId": "...", "Status": "...", "CreatedAt": "..." }
     /// </summary>
     private async Task HandleSubscriptionCreatedAsync(
         ISagaService sagaService,
@@ -133,24 +134,32 @@ public class OrchestratorConsumerService : BackgroundService
     {
         try
         {
-            // Parse event: { "sagaId": "...", "subscriptionId": "..." }
             using (var jsonDoc = JsonDocument.Parse(messageValue))
             {
                 var root = jsonDoc.RootElement;
 
-                if (!Guid.TryParse(root.GetProperty("sagaId").GetString(), out var sagaId))
-                    throw new FormatException("Invalid sagaId format");
+                if (!Guid.TryParse(root.GetProperty("SubscriptionId").GetString(), out var subscriptionId))
+                    throw new FormatException("Invalid SubscriptionId format");
 
-                if (!Guid.TryParse(root.GetProperty("subscriptionId").GetString(), out var subscriptionId))
-                    throw new FormatException("Invalid subscriptionId format");
+                if (!Guid.TryParse(root.GetProperty("CustomerId").GetString(), out var customerId))
+                    throw new FormatException("Invalid CustomerId format");
 
-                _logger.LogInformation("SubscriptionCreated event - PIVOT. SagaId: {SagaId}, SubscriptionId: {SubscriptionId}",
-                    sagaId, subscriptionId);
+                // Find SAGA by CustomerId (SAGA was created with customerId, but hasn't subscriptionId yet)
+                // We need to find the SAGA in Pending state with matching CustomerId
+                var saga = await sagaService.GetSagaByCustomerIdAsync(customerId);
+                if (saga == null)
+                {
+                    _logger.LogWarning("SAGA not found for CustomerId: {CustomerId}", customerId);
+                    return;
+                }
+
+                _logger.LogInformation("SubscriptionCreated event - PIVOT. SagaId: {SagaId}, SubscriptionId: {SubscriptionId}, CustomerId: {CustomerId}",
+                    saga.Id, subscriptionId, customerId);
 
                 // Mark PIVOT: subscription created, now provision tenant required
-                await sagaService.HandleSubscriptionCreatedAsync(sagaId, subscriptionId);
+                await sagaService.HandleSubscriptionCreatedAsync(saga.Id, subscriptionId);
 
-                _logger.LogInformation("SAGA {SagaId} progressed to Provisioning state", sagaId);
+                _logger.LogInformation("SAGA {SagaId} progressed to Provisioning state", saga.Id);
             }
         }
         catch (Exception ex)
@@ -162,6 +171,7 @@ public class OrchestratorConsumerService : BackgroundService
 
     /// <summary>
     /// Handle TenantProvisionedEvent from ProvisioningService.
+    /// Event format: { "TenantId": "...", "SubscriptionId": "...", "TenantName": "...", "Status": "...", "ProvisionedAt": "..." }
     /// </summary>
     private async Task HandleTenantProvisionedAsync(
         ISagaService sagaService,
@@ -169,24 +179,31 @@ public class OrchestratorConsumerService : BackgroundService
     {
         try
         {
-            // Parse event: { "sagaId": "...", "tenantId": "..." }
             using (var jsonDoc = JsonDocument.Parse(messageValue))
             {
                 var root = jsonDoc.RootElement;
 
-                if (!Guid.TryParse(root.GetProperty("sagaId").GetString(), out var sagaId))
-                    throw new FormatException("Invalid sagaId format");
+                if (!Guid.TryParse(root.GetProperty("SubscriptionId").GetString(), out var subscriptionId))
+                    throw new FormatException("Invalid SubscriptionId format");
 
-                if (!Guid.TryParse(root.GetProperty("tenantId").GetString(), out var tenantId))
-                    throw new FormatException("Invalid tenantId format");
+                if (!Guid.TryParse(root.GetProperty("TenantId").GetString(), out var tenantId))
+                    throw new FormatException("Invalid TenantId format");
 
-                _logger.LogInformation("TenantProvisioned event. SagaId: {SagaId}, TenantId: {TenantId}",
-                    sagaId, tenantId);
+                // Find SAGA by SubscriptionId
+                var saga = await sagaService.GetSagaBySubscriptionIdAsync(subscriptionId);
+                if (saga == null)
+                {
+                    _logger.LogWarning("SAGA not found for SubscriptionId: {SubscriptionId}", subscriptionId);
+                    return;
+                }
+
+                _logger.LogInformation("TenantProvisioned event. SagaId: {SagaId}, TenantId: {TenantId}, SubscriptionId: {SubscriptionId}",
+                    saga.Id, tenantId, subscriptionId);
 
                 // Tenant created, now send welcome email
-                await sagaService.HandleTenantProvisionedAsync(sagaId, tenantId);
+                await sagaService.HandleTenantProvisionedAsync(saga.Id, tenantId);
 
-                _logger.LogInformation("SAGA {SagaId} progressed to Notifying state", sagaId);
+                _logger.LogInformation("SAGA {SagaId} progressed to Notifying state", saga.Id);
             }
         }
         catch (Exception ex)
@@ -198,6 +215,7 @@ public class OrchestratorConsumerService : BackgroundService
 
     /// <summary>
     /// Handle TenantProvisioningFailedEvent from ProvisioningService - triggers compensation.
+    /// Event format: { "TenantId": "...", "SubscriptionId": "...", "TenantName": "...", "ErrorMessage": "...", "Attempts": ... }
     /// </summary>
     private async Task HandleTenantProvisioningFailedAsync(
         ISagaService sagaService,
@@ -205,23 +223,30 @@ public class OrchestratorConsumerService : BackgroundService
     {
         try
         {
-            // Parse event: { "sagaId": "...", "errorMessage": "..." }
             using (var jsonDoc = JsonDocument.Parse(messageValue))
             {
                 var root = jsonDoc.RootElement;
 
-                if (!Guid.TryParse(root.GetProperty("sagaId").GetString(), out var sagaId))
-                    throw new FormatException("Invalid sagaId format");
+                if (!Guid.TryParse(root.GetProperty("SubscriptionId").GetString(), out var subscriptionId))
+                    throw new FormatException("Invalid SubscriptionId format");
 
-                var errorMessage = root.GetProperty("errorMessage").GetString() ?? "Unknown error";
+                var errorMessage = root.GetProperty("ErrorMessage").GetString() ?? "Unknown error";
 
-                _logger.LogWarning("TenantProvisioningFailed event. SagaId: {SagaId}, Error: {ErrorMessage}",
-                    sagaId, errorMessage);
+                // Find SAGA by SubscriptionId
+                var saga = await sagaService.GetSagaBySubscriptionIdAsync(subscriptionId);
+                if (saga == null)
+                {
+                    _logger.LogWarning("SAGA not found for SubscriptionId: {SubscriptionId}", subscriptionId);
+                    return;
+                }
+
+                _logger.LogWarning("TenantProvisioningFailed event. SagaId: {SagaId}, SubscriptionId: {SubscriptionId}, Error: {ErrorMessage}",
+                    saga.Id, subscriptionId, errorMessage);
 
                 // Provisioning failed, trigger compensation
-                await sagaService.HandleTenantProvisioningFailedAsync(sagaId, errorMessage);
+                await sagaService.HandleTenantProvisioningFailedAsync(saga.Id, errorMessage);
 
-                _logger.LogInformation("SAGA {SagaId} triggered compensation", sagaId);
+                _logger.LogInformation("SAGA {SagaId} triggered compensation", saga.Id);
             }
         }
         catch (Exception ex)
@@ -233,6 +258,7 @@ public class OrchestratorConsumerService : BackgroundService
 
     /// <summary>
     /// Handle EmailSentEvent from NotificationService - marks SAGA as completed.
+    /// Event format: { "EmailId": "...", "SubscriptionId": "...", "RecipientEmail": "...", "EmailType": "...", "SentAt": "..." }
     /// </summary>
     private async Task HandleEmailSentAsync(
         ISagaService sagaService,
@@ -240,24 +266,31 @@ public class OrchestratorConsumerService : BackgroundService
     {
         try
         {
-            // Parse event: { "sagaId": "...", "emailId": "..." }
             using (var jsonDoc = JsonDocument.Parse(messageValue))
             {
                 var root = jsonDoc.RootElement;
 
-                if (!Guid.TryParse(root.GetProperty("sagaId").GetString(), out var sagaId))
-                    throw new FormatException("Invalid sagaId format");
+                if (!Guid.TryParse(root.GetProperty("SubscriptionId").GetString(), out var subscriptionId))
+                    throw new FormatException("Invalid SubscriptionId format");
 
-                if (!Guid.TryParse(root.GetProperty("emailId").GetString(), out var emailId))
-                    throw new FormatException("Invalid emailId format");
+                if (!Guid.TryParse(root.GetProperty("EmailId").GetString(), out var emailId))
+                    throw new FormatException("Invalid EmailId format");
 
-                _logger.LogInformation("EmailSent event. SagaId: {SagaId}, EmailId: {EmailId}",
-                    sagaId, emailId);
+                // Find SAGA by SubscriptionId
+                var saga = await sagaService.GetSagaBySubscriptionIdAsync(subscriptionId);
+                if (saga == null)
+                {
+                    _logger.LogWarning("SAGA not found for SubscriptionId: {SubscriptionId}", subscriptionId);
+                    return;
+                }
+
+                _logger.LogInformation("EmailSent event. SagaId: {SagaId}, EmailId: {EmailId}, SubscriptionId: {SubscriptionId}",
+                    saga.Id, emailId, subscriptionId);
 
                 // Email sent, SAGA completed successfully
-                await sagaService.HandleEmailSentAsync(sagaId, emailId);
+                await sagaService.HandleEmailSentAsync(saga.Id, emailId);
 
-                _logger.LogInformation("SAGA {SagaId} completed successfully ✅", sagaId);
+                _logger.LogInformation("SAGA {SagaId} completed successfully ✅", saga.Id);
             }
         }
         catch (Exception ex)

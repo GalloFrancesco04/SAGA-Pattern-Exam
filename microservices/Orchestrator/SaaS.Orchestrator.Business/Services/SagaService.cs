@@ -68,6 +68,23 @@ public class SagaService : ISagaService
             .FirstOrDefaultAsync(s => s.Id == sagaId, cancellationToken);
     }
 
+    public async Task<SagaInstance?> GetSagaBySubscriptionIdAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
+    {
+        return await _context.SagaInstances
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.SubscriptionId == subscriptionId, cancellationToken);
+    }
+
+    public async Task<SagaInstance?> GetSagaByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default)
+    {
+        // Get the most recent Pending saga for this customer
+        return await _context.SagaInstances
+            .AsNoTracking()
+            .Where(s => s.CustomerId == customerId && s.Status == SagaStatus.Pending)
+            .OrderByDescending(s => s.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task HandleSubscriptionCreatedAsync(Guid sagaId, Guid subscriptionId, CancellationToken cancellationToken = default)
     {
         var saga = await _context.SagaInstances.FindAsync(new object[] { sagaId }, cancellationToken);

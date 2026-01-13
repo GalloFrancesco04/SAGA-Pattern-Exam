@@ -18,6 +18,16 @@ public interface ISagaService
     Task<SagaInstance?> GetSagaInstanceAsync(Guid sagaId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Retrieves SAGA instance by subscription ID
+    /// </summary>
+    Task<SagaInstance?> GetSagaBySubscriptionIdAsync(Guid subscriptionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves the most recent pending SAGA instance by customer ID
+    /// </summary>
+    Task<SagaInstance?> GetSagaByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Handles subscription created event (PIVOT transaction)
     /// </summary>
     Task HandleSubscriptionCreatedAsync(Guid sagaId, Guid subscriptionId, CancellationToken cancellationToken = default);
