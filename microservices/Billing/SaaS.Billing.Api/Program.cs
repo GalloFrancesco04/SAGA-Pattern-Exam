@@ -19,7 +19,10 @@ builder.Services.AddKafkaClients(options =>
 
 // Business services
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+
+// Background services
 builder.Services.AddHostedService<BillingProducerService>();
+builder.Services.AddHostedService<BillingConsumerService>();
 
 var app = builder.Build();
 

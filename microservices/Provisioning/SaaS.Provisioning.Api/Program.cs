@@ -23,6 +23,7 @@ builder.Services.AddKafkaClients(options =>
 
 // Register background services
 builder.Services.AddHostedService<ProvisioningProducerService>();
+builder.Services.AddHostedService<ProvisioningConsumerService>();
 
 var app = builder.Build();
 

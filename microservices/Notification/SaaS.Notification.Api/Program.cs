@@ -28,6 +28,7 @@ builder.Services.AddKafkaClients(options =>
 
 // Background services
 builder.Services.AddHostedService<NotificationProducerService>();
+builder.Services.AddHostedService<NotificationConsumerService>();
 
 var app = builder.Build();
 
