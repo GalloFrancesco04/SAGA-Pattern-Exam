@@ -2,10 +2,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy sln and csproj files
-COPY ["EsempiDotNet.sln", "."]
-COPY ["libraries/", "libraries/"]
-COPY ["microservices/Billing/", "microservices/Billing/"]
+# Copy all files
+COPY . .
 
 # Restore and build
 RUN dotnet restore "EsempiDotNet.sln"
