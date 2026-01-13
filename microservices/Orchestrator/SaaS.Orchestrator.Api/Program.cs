@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SaaS.Orchestrator.Business.Services;
 using SaaS.Orchestrator.Repository.Contexts;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 builder.Services.AddDbContext<OrchestratorDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("OrchestratorDb")));
+builder.Services.AddScoped<ISagaService, SagaService>();
 
 var app = builder.Build();
 
