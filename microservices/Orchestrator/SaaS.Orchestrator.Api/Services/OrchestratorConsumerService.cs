@@ -48,11 +48,40 @@ public class OrchestratorConsumerService : BackgroundService
         {
             _logger.LogInformation("OrchestratorConsumerService consumer loop started");
 
-            // Use the ConsumeInLoopAsync pattern from IConsumerClient
-            await _consumerClient.ConsumeInLoopAsync(
-                ConsumerTopics,
-                ProcessMessageAsync,
-                cancellationToken);
+            // Retry loop with exponential backoff if topics don't exist yet
+            int maxRetries = 10;
+            int retryCount = 0;
+            int delayMs = 1000;
+
+            while (retryCount < maxRetries && !cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    // Use the ConsumeInLoopAsync pattern from IConsumerClient
+                    await _consumerClient.ConsumeInLoopAsync(
+                        ConsumerTopics,
+                        ProcessMessageAsync,
+                        cancellationToken);
+
+                    // If we get here without exception, break the retry loop
+                    break;
+                }
+                catch (Confluent.Kafka.ConsumeException ex) when (ex.Error.Code == Confluent.Kafka.ErrorCode.UnknownTopicOrPart)
+                {
+                    retryCount++;
+                    if (retryCount >= maxRetries)
+                    {
+                        _logger.LogError(ex, "Topic subscription failed after {RetryCount} retries. Topics may not exist yet.", maxRetries);
+                        throw;
+                    }
+
+                    _logger.LogWarning("Topics not available yet (attempt {RetryCount}/{MaxRetries}). Retrying in {DelayMs}ms...",
+                        retryCount, maxRetries, delayMs);
+
+                    await Task.Delay(delayMs, cancellationToken);
+                    delayMs = Math.Min(delayMs * 2, 10000); // Exponential backoff, max 10s
+                }
+            }
         }
         catch (OperationCanceledException)
         {
