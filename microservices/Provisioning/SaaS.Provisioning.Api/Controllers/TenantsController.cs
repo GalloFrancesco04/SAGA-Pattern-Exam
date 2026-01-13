@@ -22,6 +22,34 @@ public class TenantsController : ControllerBase
     }
 
     /// <summary>
+    /// Lists all provisioned tenants with optional filtering
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(List<ProvisionTenantResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult> GetAllTenantsAsync(
+        [FromQuery] string? status = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Retrieving all tenants with filter status={Status}, skip={Skip}, take={Take}", status, skip, take);
+
+        var tenants = await _tenantService.GetAllTenantsAsync(status, skip, take, cancellationToken);
+
+        var responses = tenants.Select(t => new ProvisionTenantResponse
+        {
+            TenantId = t.Id,
+            SubscriptionId = t.SubscriptionId,
+            TenantName = t.TenantName,
+            Status = t.Status,
+            ProvisionedAt = t.ProvisionedAt,
+            CreatedAt = t.CreatedAt
+        }).ToList();
+
+        return Ok(responses);
+    }
+
+    /// <summary>
     /// Provisions a new tenant for a subscription
     /// </summary>
     /// <param name="request">Provision request with subscription ID and tenant name</param>

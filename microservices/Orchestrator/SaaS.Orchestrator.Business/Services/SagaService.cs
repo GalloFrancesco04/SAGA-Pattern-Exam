@@ -267,4 +267,24 @@ public class SagaService : ISagaService
 
         _logger.LogInformation("SAGA {SagaId} compensation commands issued", sagaId);
     }
+
+    public async Task<List<SagaInstance>> GetAllSagasAsync(string? status = null, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
+    {
+        var query = _context.SagaInstances.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(s => s.Status == status);
+        }
+
+        var sagas = await query
+            .OrderByDescending(s => s.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        _logger.LogInformation("Retrieved {Count} SAGA instances with filter status={Status}", sagas.Count, status);
+        return sagas;
+    }
 }
+

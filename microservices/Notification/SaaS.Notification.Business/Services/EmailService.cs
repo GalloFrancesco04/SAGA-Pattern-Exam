@@ -127,6 +127,23 @@ public class EmailService : IEmailService
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == emailId, cancellationToken);
     }
+
+    /// <inheritdoc/>
+    public async Task<List<EmailLog>> GetAllEmailLogsAsync(string? status = null, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
+    {
+        var query = _context.EmailLogs.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(e => e.Status == status);
+        }
+
+        return await query
+            .OrderByDescending(e => e.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+    }
 }
 
 /// <summary>

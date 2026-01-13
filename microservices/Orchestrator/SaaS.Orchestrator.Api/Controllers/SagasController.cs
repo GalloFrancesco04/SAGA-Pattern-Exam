@@ -22,6 +22,44 @@ public class SagasController : ControllerBase
     }
 
     /// <summary>
+    /// Lists all SAGA instances with optional filtering
+    /// </summary>
+    /// <param name="status">Filter by SAGA status (e.g., Pending, Provisioning, Notifying, Completed)</param>
+    /// <param name="skip">Number of records to skip for pagination</param>
+    /// <param name="take">Number of records to take for pagination</param>
+    [HttpGet]
+    [ProducesResponseType(typeof(List<GetSagaStatusResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<GetSagaStatusResponse>>> GetAllSagasAsync(
+        [FromQuery] string? status = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Retrieving all SAGA instances with filter status={Status}, skip={Skip}, take={Take}", status, skip, take);
+
+        var sagas = await _sagaService.GetAllSagasAsync(status, skip, take, cancellationToken);
+
+        var responses = sagas.Select(saga => new GetSagaStatusResponse(
+            saga.Id,
+            saga.CustomerId,
+            saga.PlanId,
+            saga.TenantName,
+            saga.SubscriptionId,
+            saga.TenantId,
+            saga.EmailId,
+            saga.Status,
+            saga.CurrentStep,
+            saga.ErrorMessage,
+            saga.CompensationNeeded,
+            saga.CreatedAt,
+            saga.UpdatedAt,
+            saga.CompletedAt
+        )).ToList();
+
+        return Ok(responses);
+    }
+
+    /// <summary>
     /// Starts a new subscription SAGA
     /// </summary>
     [HttpPost("subscription")]
@@ -66,8 +104,9 @@ public class SagasController : ControllerBase
     }
 
     /// <summary>
-    /// Gets the current status of a SAGA
+    /// Gets the current status of a SAGA by ID with all details
     /// </summary>
+    /// <param name="id">The SAGA ID to retrieve</param>
     [HttpGet("{id:guid}", Name = "GetSagaStatus")]
     [ProducesResponseType(typeof(GetSagaStatusResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

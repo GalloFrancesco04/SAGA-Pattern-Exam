@@ -51,4 +51,10 @@ public interface ISagaService
     /// Triggers compensation flow for a failed SAGA
     /// </summary>
     Task CompensateSagaAsync(Guid sagaId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves all SAGA instances with optional filtering and pagination
+    /// </summary>
+    Task<List<SagaInstance>> GetAllSagasAsync(string? status = null, int skip = 0, int take = 50, CancellationToken cancellationToken = default);
 }
+

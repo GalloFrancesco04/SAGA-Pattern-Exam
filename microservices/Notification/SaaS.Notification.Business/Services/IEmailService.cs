@@ -32,4 +32,14 @@ public interface IEmailService
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The email log or null if not found</returns>
     Task<SaaS.Notification.Shared.Entities.EmailLog?> GetEmailLogAsync(Guid emailId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all email logs with optional filtering and pagination
+    /// </summary>
+    /// <param name="status">Filter by email status (optional)</param>
+    /// <param name="skip">Number of records to skip (pagination)</param>
+    /// <param name="take">Number of records to take (pagination)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of email logs</returns>
+    Task<List<SaaS.Notification.Shared.Entities.EmailLog>> GetAllEmailLogsAsync(string? status = null, int skip = 0, int take = 50, CancellationToken cancellationToken = default);
 }

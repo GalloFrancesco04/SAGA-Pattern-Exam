@@ -101,4 +101,21 @@ public class SubscriptionService : ISubscriptionService
 
         return true;
     }
+
+    public async Task<List<Subscription>> GetAllSubscriptionsAsync(string? status = null, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Subscriptions.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(s => s.Status == status);
+        }
+
+        return await query
+            .OrderByDescending(s => s.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+    }
 }
+

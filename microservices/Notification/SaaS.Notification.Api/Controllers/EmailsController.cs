@@ -21,6 +21,37 @@ public class EmailsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets all email logs with optional filtering and pagination
+    /// </summary>
+    /// <param name="status">Filter by email status (optional)</param>
+    /// <param name="skip">Number of records to skip (pagination)</param>
+    /// <param name="take">Number of records to take (pagination)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of email logs</returns>
+    [HttpGet]
+    [ProducesResponseType(typeof(List<GetEmailLogResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllEmailLogsAsync(
+        [FromQuery] string? status = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var emailLogs = await _emailService.GetAllEmailLogsAsync(status, skip, take, cancellationToken);
+
+        var responses = emailLogs.Select(emailLog => new GetEmailLogResponse(
+            EmailId: emailLog.Id,
+            SubscriptionId: emailLog.SubscriptionId,
+            RecipientEmail: emailLog.RecipientEmail,
+            Subject: emailLog.Subject,
+            Status: emailLog.Status,
+            CreatedAt: emailLog.CreatedAt,
+            SentAt: emailLog.SentAt
+        )).ToList();
+
+        return Ok(responses);
+    }
+
+    /// <summary>
     /// Sends a welcome email for a new subscription
     /// </summary>
     /// <param name="request">The welcome email request</param>

@@ -185,6 +185,22 @@ public class TenantService : ITenantService
         // Simulate cleanup
         await Task.Delay(300, cancellationToken);
     }
+
+    public async Task<List<Tenant>> GetAllTenantsAsync(string? status = null, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Tenants.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(t => t.Status == status);
+        }
+
+        return await query
+            .OrderByDescending(t => t.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+    }
 }
 
 public record TenantProvisionedEvent

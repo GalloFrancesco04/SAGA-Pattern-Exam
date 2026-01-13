@@ -20,6 +20,24 @@ public class SubscriptionsController : ControllerBase
     }
 
     /// <summary>
+    /// Lists all subscriptions with optional filtering
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(List<Subscription>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllSubscriptions(
+        [FromQuery] string? status = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Retrieving all subscriptions with filter status={Status}, skip={Skip}, take={Take}", status, skip, take);
+
+        var subscriptions = await _subscriptionService.GetAllSubscriptionsAsync(status, skip, take, cancellationToken);
+
+        return Ok(subscriptions);
+    }
+
+    /// <summary>
     /// Creates a new subscription for a customer
     /// </summary>
     [HttpPost]

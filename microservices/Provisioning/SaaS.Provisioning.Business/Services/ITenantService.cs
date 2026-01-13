@@ -18,4 +18,9 @@ public interface ITenantService
     /// Deprovisions a tenant (cleanup resources)
     /// </summary>
     Task<bool> DeprovisionTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all tenants with optional filtering and pagination
+    /// </summary>
+    Task<List<Tenant>> GetAllTenantsAsync(string? status = null, int skip = 0, int take = 50, CancellationToken cancellationToken = default);
 }

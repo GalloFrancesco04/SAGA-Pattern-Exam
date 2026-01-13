@@ -7,4 +7,6 @@ public interface ISubscriptionService
     Task<Subscription> CreateSubscriptionAsync(Guid customerId, string planId, CancellationToken cancellationToken = default);
     Task<Subscription?> GetSubscriptionAsync(Guid subscriptionId, CancellationToken cancellationToken = default);
     Task<bool> CancelSubscriptionAsync(Guid subscriptionId, CancellationToken cancellationToken = default);
+    Task<List<Subscription>> GetAllSubscriptionsAsync(string? status = null, int skip = 0, int take = 50, CancellationToken cancellationToken = default);
 }
+
