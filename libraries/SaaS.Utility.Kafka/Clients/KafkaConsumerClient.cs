@@ -31,7 +31,35 @@ public class KafkaConsumerClient : IConsumerClient<string, string>
         var topicList = topics.ToList();
         _logger.LogInformation("Starting consumption from topics: {Topics}", string.Join(", ", topicList));
 
-        _consumer.Subscribe(topicList);
+        // Retry logic for topic subscription (topics might not exist yet)
+        int retryCount = 0;
+        const int maxRetries = 10;
+        const int initialDelayMs = 2000;
+
+        while (retryCount < maxRetries)
+        {
+            try
+            {
+                _consumer.Subscribe(topicList);
+                _logger.LogInformation("Successfully subscribed to topics");
+                break;
+            }
+            catch (Exception ex)
+            {
+                retryCount++;
+                int delayMs = initialDelayMs * (int)Math.Pow(2, retryCount - 1); // Exponential backoff
+                _logger.LogWarning("Failed to subscribe to topics (attempt {Attempt}/{Max}). Retrying in {DelayMs}ms. Error: {Error}",
+                    retryCount, maxRetries, delayMs, ex.Message);
+
+                if (retryCount >= maxRetries)
+                {
+                    _logger.LogError("Failed to subscribe to topics after {MaxRetries} attempts", maxRetries);
+                    throw;
+                }
+
+                await Task.Delay(delayMs, cancellationToken);
+            }
+        }
 
         try
         {
