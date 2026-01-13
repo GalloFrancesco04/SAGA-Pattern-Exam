@@ -18,7 +18,7 @@ public class NotificationConsumerService : BackgroundService
     // Topics to consume from
     private static readonly string[] ConsumerTopics = new[]
     {
-        "saas-send-email"  // OrchestratorService: SendEmail command
+        "saas-send-welcome-email"  // OrchestratorService: SendWelcomeEmail command
     };
 
     public NotificationConsumerService(
@@ -88,7 +88,7 @@ public class NotificationConsumerService : BackgroundService
                 // Route based on topic
                 switch (topic)
                 {
-                    case "saas-send-email":
+                    case "saas-send-welcome-email":
                         await HandleSendEmailAsync(emailService, messageValue);
                         break;
 
