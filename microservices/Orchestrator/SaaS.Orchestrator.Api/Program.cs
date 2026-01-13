@@ -19,6 +19,7 @@ builder.Services.AddDbContext<OrchestratorDbContext>(options =>
 builder.Services.AddScoped<ISagaService, SagaService>();
 builder.Services.AddKafkaClients(options => builder.Configuration.GetSection("Kafka").Bind(options));
 builder.Services.AddHostedService<OrchestratorProducerService>();
+builder.Services.AddHostedService<OrchestratorConsumerService>();
 
 var app = builder.Build();
 
