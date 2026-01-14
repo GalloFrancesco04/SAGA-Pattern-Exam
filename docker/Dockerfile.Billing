@@ -2,10 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy solution and projects
-COPY ["SaaS.Solution.sln", "."]
-COPY ["libraries/SaaS.Utility.Kafka/", "libraries/SaaS.Utility.Kafka/"]
-COPY ["microservices/Billing/", "microservices/Billing/"]
+# Copy NuGet config and local packages first
+COPY NuGet.config .
+COPY nuget-packages ./nuget-packages
+
+# Copy entire repository
+COPY . .
 
 # Restore NuGet packages
 RUN dotnet restore "SaaS.Solution.sln"
