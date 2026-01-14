@@ -10,11 +10,11 @@ services:
     volumes:
       - "mssql-server:/var/opt/mssql"
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "127.0.0.1", "-U", "sa", "-P", "p4ssw0rD", "-Q", "SELECT 1"]
-      interval: 15s
-      timeout: 10s
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "127.0.0.1", "-U", "sa", "-P", "p4ssw0rD", "-C", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
       retries: 10
-      start_period: 120s
+      start_period: 60s
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.7.0
@@ -42,11 +42,39 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.7.0
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ['/bin/sh', '-c']
+    command: |
+      "
+      echo 'Waiting for Kafka to be ready...'
+      sleep 10
+      
+      echo 'Creating Kafka topics...'
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic saas-create-subscription
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic saas-subscription-created
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic saas-subscription-failed
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic saas-provision-tenant
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic saas-tenant-provisioned
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic saas-tenant-provisioning-failed
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic saas-send-welcome-email
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --partitions 1 --replication-factor 1 --topic saas-email-sent
+      
+      echo 'Topics created successfully!'
+      kafka-topics --list --bootstrap-server kafka:29092
+      "
+    restart: "no"
 
   saas-orchestrator:
     build:
@@ -55,14 +83,18 @@ services:
     image: saas-orchestrator:latest
     container_name: saas-orchestrator
     depends_on:
-      - mssql-server
-      - kafka
+      mssql-server:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     ports:
       - "5013:8080"
     environment:
       TZ: Europe/Rome
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__OrchestratorDb: "Server=mssql-server,1433;Database=SaaS_Orchestrator;User Id=sa;Password=p4ssw0rD;TrustServerCertificate=true;MultipleActiveResultSets=true"
+      Kafka__BootstrapServers: "kafka:9092"
 
   saas-billing:
     build:
@@ -71,14 +103,18 @@ services:
     image: saas-billing:latest
     container_name: saas-billing
     depends_on:
-      - mssql-server
-      - kafka
+      mssql-server:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     ports:
       - "5037:8080"
     environment:
       TZ: Europe/Rome
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__BillingDb: "Server=mssql-server,1433;Database=SaaS_Billing;User Id=sa;Password=p4ssw0rD;TrustServerCertificate=true;MultipleActiveResultSets=true"
+      Kafka__BootstrapServers: "kafka:9092"
 
   saas-provisioning:
     build:
@@ -87,14 +123,18 @@ services:
     image: saas-provisioning:latest
     container_name: saas-provisioning
     depends_on:
-      - mssql-server
-      - kafka
+      mssql-server:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     ports:
       - "5148:8080"
     environment:
       TZ: Europe/Rome
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__ProvisioningDb: "Server=mssql-server,1433;Database=SaaS_Provisioning;User Id=sa;Password=p4ssw0rD;TrustServerCertificate=true;MultipleActiveResultSets=true"
+      Kafka__BootstrapServers: "kafka:9092"
 
   saas-notification:
     build:
@@ -103,14 +143,18 @@ services:
     image: saas-notification:latest
     container_name: saas-notification
     depends_on:
-      - mssql-server
-      - kafka
+      mssql-server:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     ports:
       - "5214:8080"
     environment:
       TZ: Europe/Rome
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__NotificationDb: "Server=mssql-server,1433;Database=SaaS_Notification;User Id=sa;Password=p4ssw0rD;TrustServerCertificate=true;MultipleActiveResultSets=true"
+      Kafka__BootstrapServers: "kafka:9092"
 
 volumes:
   mssql-server:
