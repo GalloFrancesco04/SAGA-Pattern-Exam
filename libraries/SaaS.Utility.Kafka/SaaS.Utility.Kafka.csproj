@@ -9,6 +9,11 @@
     <IsPackable>true</IsPackable>
     <Description>Kafka utility library for SaaS Subscription SAGA pattern with Transactional Outbox and Consumer/Producer services.</Description>
     <Authors>GalloFrancesco04</Authors>
+    <PackageId>GalloFrancesco04.SaaS.Utility.Kafka</PackageId>
+    <RepositoryUrl>https://github.com/GalloFrancesco04/SAGA-Pattern-Exam</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/GalloFrancesco04/SAGA-Pattern-Exam</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
