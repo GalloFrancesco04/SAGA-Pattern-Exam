@@ -1,11 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿0000<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <PackageVersion>1.0.0</PackageVersion>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <PackageVersion>1.0.1</PackageVersion>
     <IsPackable>true</IsPackable>
     <Description>Kafka utility library for SaaS Subscription SAGA pattern with Transactional Outbox and Consumer/Producer services.</Description>
     <Authors>GalloFrancesco04</Authors>
