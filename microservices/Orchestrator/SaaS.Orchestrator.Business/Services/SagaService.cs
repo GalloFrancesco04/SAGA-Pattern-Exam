@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SaaS.Orchestrator.ClientHttp.Clients;
 using SaaS.Orchestrator.Repository.Contexts;
 using SaaS.Orchestrator.Shared.Entities;
 using System.Text.Json;
@@ -13,11 +14,19 @@ public class SagaService : ISagaService
 {
     private readonly OrchestratorDbContext _context;
     private readonly ILogger<SagaService> _logger;
+    private readonly IBillingClient _billingClient;
+    private readonly IProvisioningClient _provisioningClient;
 
-    public SagaService(OrchestratorDbContext context, ILogger<SagaService> logger)
+    public SagaService(
+        OrchestratorDbContext context,
+        ILogger<SagaService> logger,
+        IBillingClient billingClient,
+        IProvisioningClient provisioningClient)
     {
         _context = context;
         _logger = logger;
+        _billingClient = billingClient;
+        _provisioningClient = provisioningClient;
     }
 
     public async Task<Guid> StartSubscriptionSagaAsync(Guid customerId, string planId, string tenantName, CancellationToken cancellationToken = default)
@@ -94,6 +103,14 @@ public class SagaService : ISagaService
             return;
         }
 
+        // HTTP synchronous verification: Check subscription status
+        var subscriptionStatus = await _billingClient.GetSubscriptionStatusAsync(subscriptionId, cancellationToken);
+        if (subscriptionStatus != null)
+        {
+            _logger.LogInformation("HTTP verification: Subscription {SubscriptionId} status is {Status}, IsActive={IsActive}",
+                subscriptionId, subscriptionStatus.Status, subscriptionStatus.IsActive);
+        }
+
         // PIVOT reached - update saga state
         saga.SubscriptionId = subscriptionId;
         saga.Status = "Provisioning";
@@ -129,6 +146,14 @@ public class SagaService : ISagaService
         {
             _logger.LogWarning("SAGA {SagaId} not found", sagaId);
             return;
+        }
+
+        // HTTP synchronous verification: Check tenant status
+        var tenantStatus = await _provisioningClient.GetTenantStatusAsync(tenantId, cancellationToken);
+        if (tenantStatus != null)
+        {
+            _logger.LogInformation("HTTP verification: Tenant {TenantId} status is {Status}, ReadyForUse={ReadyForUse}",
+                tenantId, tenantStatus.Status, tenantStatus.ReadyForUse);
         }
 
         saga.TenantId = tenantId;
