@@ -1,0 +1,16 @@
+.git
+.gitignore
+.vs
+.vscode
+bin
+obj
+*.log
+*.user
+*.suo
+.DS_Store
+node_modules
+.env
+.env.local
+docker
+sql
+Notification
