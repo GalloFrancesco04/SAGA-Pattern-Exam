@@ -15,8 +15,7 @@ builder.Services.AddHealthChecks();
 builder.Services.AddDbContext<OrchestratorDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("OrchestratorDb"),
-        b => b.MigrationsAssembly("SaaS.Orchestrator.Api")
-    ));
+        b => b.MigrationsAssembly("SaaS.Orchestrator.Api")));
 builder.Services.AddScoped<ISagaService, SagaService>();
 builder.Services.AddKafkaClients(options => builder.Configuration.GetSection("Kafka").Bind(options));
 builder.Services.AddHostedService<OrchestratorProducerService>();
@@ -28,19 +27,19 @@ builder.Services.AddProvisioningClient(builder.Configuration);
 
 var app = builder.Build();
 
-// Ensure database is created
+// Apply database migrations
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<OrchestratorDbContext>();
     try
     {
-        await dbContext.Database.EnsureCreatedAsync();
+        await dbContext.Database.MigrateAsync();
     }
     catch (Exception ex)
     {
         // Log but don't fail startup
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Failed to ensure database creation");
+        logger.LogWarning(ex, "Failed to apply database migrations");
     }
 }
 

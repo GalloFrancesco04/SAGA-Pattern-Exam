@@ -12,7 +12,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<ProvisioningDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ProvisioningDb")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("ProvisioningDb"),
+        b => b.MigrationsAssembly("SaaS.Provisioning.Api")));
 
 // Register business services
 builder.Services.AddScoped<ITenantService, TenantService>();
@@ -27,19 +29,19 @@ builder.Services.AddHostedService<ProvisioningConsumerService>();
 
 var app = builder.Build();
 
-// Ensure database is created
+// Apply database migrations
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ProvisioningDbContext>();
     try
     {
-        await dbContext.Database.EnsureCreatedAsync();
+        await dbContext.Database.MigrateAsync();
     }
     catch (Exception ex)
     {
         // Log but don't fail startup
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Failed to ensure database creation");
+        logger.LogWarning(ex, "Failed to apply database migrations");
     }
 }
 

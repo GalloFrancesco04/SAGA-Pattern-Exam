@@ -13,7 +13,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 builder.Services.AddDbContext<BillingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BillingDb")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("BillingDb"),
+        b => b.MigrationsAssembly("SaaS.Billing.Api")));
 builder.Services.AddKafkaClients(options =>
     builder.Configuration.GetSection("Kafka").Bind(options));
 
@@ -26,19 +28,19 @@ builder.Services.AddHostedService<BillingConsumerService>();
 
 var app = builder.Build();
 
-// Ensure database is created
+// Apply database migrations
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<BillingDbContext>();
     try
     {
-        await dbContext.Database.EnsureCreatedAsync();
+        await dbContext.Database.MigrateAsync();
     }
     catch (Exception ex)
     {
         // Log but don't fail startup
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Failed to ensure database creation");
+        logger.LogWarning(ex, "Failed to apply database migrations");
     }
 }
 

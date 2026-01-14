@@ -32,19 +32,19 @@ builder.Services.AddHostedService<NotificationConsumerService>();
 
 var app = builder.Build();
 
-// Ensure database is created
+// Apply database migrations
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
     try
     {
-        await dbContext.Database.EnsureCreatedAsync();
+        await dbContext.Database.MigrateAsync();
     }
     catch (Exception ex)
     {
         // Log but don't fail startup
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Failed to ensure database creation");
+        logger.LogWarning(ex, "Failed to apply database migrations");
     }
 }
 
