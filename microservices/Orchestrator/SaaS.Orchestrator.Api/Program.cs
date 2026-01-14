@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SaaS.Orchestrator.Api.Services;
 using SaaS.Orchestrator.Business.Services;
+using SaaS.Orchestrator.ClientHttp.Clients;
 using SaaS.Orchestrator.Repository.Contexts;
 using SaaS.Utility.Kafka.DependencyInjection;
 
@@ -20,6 +21,27 @@ builder.Services.AddScoped<ISagaService, SagaService>();
 builder.Services.AddKafkaClients(options => builder.Configuration.GetSection("Kafka").Bind(options));
 builder.Services.AddHostedService<OrchestratorProducerService>();
 builder.Services.AddHostedService<OrchestratorConsumerService>();
+
+// Configure HTTP Clients for synchronous communication
+builder.Services.AddHttpClient<IBillingClient, BillingClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:Billing:Url"];
+    if (!string.IsNullOrEmpty(baseUrl))
+    {
+        client.BaseAddress = new Uri(baseUrl);
+    }
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHttpClient<IProvisioningClient, ProvisioningClient>(client =>
+{
+    var baseUrl = builder.Configuration["Services:Provisioning:Url"];
+    if (!string.IsNullOrEmpty(baseUrl))
+    {
+        client.BaseAddress = new Uri(baseUrl);
+    }
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 var app = builder.Build();
 
