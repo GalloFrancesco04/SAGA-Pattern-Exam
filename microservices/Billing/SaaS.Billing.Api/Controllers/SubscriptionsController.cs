@@ -108,7 +108,6 @@ public class SubscriptionsController : ControllerBase
             Id = subscription.Id,
             Status = subscription.Status,
             PlanId = subscription.PlanId,
-            Amount = subscription.Amount,
             IsActive = subscription.Status == "Active",
             CreatedAt = subscription.CreatedAt
         };
