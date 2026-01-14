@@ -1,0 +1,27 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy solution and projects
+COPY ["SaaS.Solution.sln", "."]
+COPY ["libraries/SaaS.Utility.Kafka/", "libraries/SaaS.Utility.Kafka/"]
+COPY ["microservices/Billing/", "microservices/Billing/"]
+
+# Restore NuGet packages
+RUN dotnet restore "SaaS.Solution.sln"
+
+# Build
+RUN dotnet build "SaaS.Solution.sln" -c Release -o /app/build
+
+# Publish
+RUN dotnet publish "microservices/Billing/SaaS.Billing.Api/SaaS.Billing.Api.csproj" -c Release -o /app/publish
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+COPY --from=build /app/publish .
+
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+
+ENTRYPOINT ["dotnet", "SaaS.Billing.Api.dll"]

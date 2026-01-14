@@ -51,7 +51,7 @@ services:
   saas-orchestrator:
     build:
       context: ..
-      dockerfile: microservices/Orchestrator/SaaS.Orchestrator.Api/Dockerfile
+      dockerfile: docker/Dockerfile.Orchestrator
     image: saas-orchestrator:latest
     container_name: saas-orchestrator
     depends_on:
@@ -63,18 +63,11 @@ services:
       TZ: Europe/Rome
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-    volumes:
-      - "./config/saas-orchestrator-appsettings.json:/app/appsettings.json:ro"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   saas-billing:
     build:
       context: ..
-      dockerfile: microservices/Billing/SaaS.Billing.Api/Dockerfile
+      dockerfile: docker/Dockerfile.Billing
     image: saas-billing:latest
     container_name: saas-billing
     depends_on:
@@ -86,18 +79,11 @@ services:
       TZ: Europe/Rome
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-    volumes:
-      - "./config/saas-billing-appsettings.json:/app/appsettings.json:ro"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   saas-provisioning:
     build:
       context: ..
-      dockerfile: microservices/Provisioning/SaaS.Provisioning.Api/Dockerfile
+      dockerfile: docker/Dockerfile.Provisioning
     image: saas-provisioning:latest
     container_name: saas-provisioning
     depends_on:
@@ -109,18 +95,11 @@ services:
       TZ: Europe/Rome
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-    volumes:
-      - "./config/saas-provisioning-appsettings.json:/app/appsettings.json:ro"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   saas-notification:
     build:
       context: ..
-      dockerfile: microservices/Notification/SaaS.Notification.Api/Dockerfile
+      dockerfile: docker/Dockerfile.Notification
     image: saas-notification:latest
     container_name: saas-notification
     depends_on:
@@ -132,13 +111,6 @@ services:
       TZ: Europe/Rome
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-    volumes:
-      - "./config/saas-notification-appsettings.json:/app/appsettings.json:ro"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 volumes:
   mssql-server:
