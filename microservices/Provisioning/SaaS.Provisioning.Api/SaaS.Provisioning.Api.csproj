@@ -16,7 +16,7 @@
     <ProjectReference Include="..\SaaS.Provisioning.Business\SaaS.Provisioning.Business.csproj" />
     <ProjectReference Include="..\SaaS.Provisioning.Repository\SaaS.Provisioning.Repository.csproj" />
     <ProjectReference Include="..\SaaS.Provisioning.Shared\SaaS.Provisioning.Shared.csproj" />
-    <ProjectReference Include="..\..\..\libraries\SaaS.Utility.Kafka\SaaS.Utility.Kafka.csproj" />
+    <PackageReference Include="SaaS.Utility.Kafka" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

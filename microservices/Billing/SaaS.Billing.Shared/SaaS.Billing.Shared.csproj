@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\libraries\SaaS.Utility.Kafka\SaaS.Utility.Kafka.csproj" />
+    <PackageReference Include="SaaS.Utility.Kafka" Version="1.0.0" />
   </ItemGroup>
 
 </Project>
