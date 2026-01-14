@@ -95,8 +95,8 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__OrchestratorDb: "Server=mssql-server,1433;Database=SaaS_Orchestrator;User Id=sa;Password=p4ssw0rD;TrustServerCertificate=true;MultipleActiveResultSets=true"
       Kafka__BootstrapServers: "kafka:9092"
-      Services__Billing__Url: "http://saas-billing:8080"
-      Services__Provisioning__Url: "http://saas-provisioning:8080"
+      Services__Billing__BaseAddress: "http://saas-billing:8080"
+      Services__Provisioning__BaseAddress: "http://saas-provisioning:8080"
 
   saas-billing:
     build:

@@ -23,25 +23,8 @@ builder.Services.AddHostedService<OrchestratorProducerService>();
 builder.Services.AddHostedService<OrchestratorConsumerService>();
 
 // Configure HTTP Clients for synchronous communication
-builder.Services.AddHttpClient<IBillingClient, BillingClient>(client =>
-{
-    var baseUrl = builder.Configuration["Services:Billing:Url"];
-    if (!string.IsNullOrEmpty(baseUrl))
-    {
-        client.BaseAddress = new Uri(baseUrl);
-    }
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
-builder.Services.AddHttpClient<IProvisioningClient, ProvisioningClient>(client =>
-{
-    var baseUrl = builder.Configuration["Services:Provisioning:Url"];
-    if (!string.IsNullOrEmpty(baseUrl))
-    {
-        client.BaseAddress = new Uri(baseUrl);
-    }
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
+builder.Services.AddBillingClient(builder.Configuration);
+builder.Services.AddProvisioningClient(builder.Configuration);
 
 var app = builder.Build();
 
