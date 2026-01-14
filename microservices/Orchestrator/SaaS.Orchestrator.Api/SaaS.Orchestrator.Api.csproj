@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SaaS.Orchestrator.Business\SaaS.Orchestrator.Business.csproj" />
+    <ProjectReference Include="..\SaaS.Orchestrator.ClientHttp\SaaS.Orchestrator.ClientHttp.csproj" />
     <ProjectReference Include="..\SaaS.Orchestrator.Repository\SaaS.Orchestrator.Repository.csproj" />
     <ProjectReference Include="..\SaaS.Orchestrator.Shared\SaaS.Orchestrator.Shared.csproj" />
     <PackageReference Include="SaaS.Utility.Kafka" Version="1.0.0" />
