@@ -140,6 +140,42 @@ public class TenantsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets tenant status by ID (for HTTP sync communication)
+    /// </summary>
+    /// <param name="id">Tenant ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Tenant status if found</returns>
+    /// <response code="200">Tenant status retrieved</response>
+    /// <response code="404">Tenant not found</response>
+    [HttpGet("{id:guid}/status")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TenantStatusDto>> GetTenantStatusAsync(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Retrieving tenant status for {TenantId}", id);
+
+        var tenant = await _tenantService.GetTenantAsync(id, cancellationToken);
+
+        if (tenant == null)
+        {
+            return NotFound($"Tenant {id} not found");
+        }
+
+        var statusDto = new TenantStatusDto
+        {
+            Id = tenant.Id,
+            Status = tenant.Status,
+            TenantName = tenant.TenantName,
+            ReadyForUse = tenant.Status == "Provisioned",
+            ProvisionedAt = tenant.ProvisionedAt
+        };
+
+        return Ok(statusDto);
+    }
+
+    /// <summary>
     /// Deprovisions an existing tenant
     /// </summary>
     /// <param name="id">Tenant ID</param>

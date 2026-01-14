@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SaaS.Billing.Business.Services;
+using SaaS.Billing.Shared.DTOs;
 using SaaS.Billing.Shared.Entities;
 
 namespace SaaS.Billing.Api.Controllers;
@@ -81,6 +82,38 @@ public class SubscriptionsController : ControllerBase
         }
 
         return Ok(subscription);
+    }
+
+    /// <summary>
+    /// Gets subscription status by ID (for HTTP sync communication)
+    /// </summary>
+    [HttpGet("{id}/status")]
+    [ProducesResponseType(typeof(SubscriptionStatusDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSubscriptionStatus(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Retrieving subscription status for {SubscriptionId}", id);
+
+        var subscription = await _subscriptionService.GetSubscriptionAsync(id, cancellationToken);
+
+        if (subscription == null)
+        {
+            return NotFound(new { message = $"Subscription {id} not found" });
+        }
+
+        var statusDto = new SubscriptionStatusDto
+        {
+            Id = subscription.Id,
+            Status = subscription.Status,
+            PlanId = subscription.PlanId,
+            Amount = subscription.Amount,
+            IsActive = subscription.Status == "Active",
+            CreatedAt = subscription.CreatedAt
+        };
+
+        return Ok(statusDto);
     }
 
     /// <summary>
