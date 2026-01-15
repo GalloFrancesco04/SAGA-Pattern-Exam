@@ -77,10 +77,7 @@ services:
     restart: "no"
 
   saas-orchestrator:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.Orchestrator
-    image: saas-orchestrator:latest
+    image: ghcr.io/gallofrancesco04/saas-orchestrator:latest
     container_name: saas-orchestrator
     depends_on:
       mssql-server:
@@ -99,10 +96,7 @@ services:
       Services__Provisioning__BaseAddress: "http://saas-provisioning:8080"
 
   saas-billing:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.Billing
-    image: saas-billing:latest
+    image: ghcr.io/gallofrancesco04/saas-billing:latest
     container_name: saas-billing
     depends_on:
       mssql-server:
@@ -119,10 +113,7 @@ services:
       Kafka__BootstrapServers: "kafka:9092"
 
   saas-provisioning:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.Provisioning
-    image: saas-provisioning:latest
+    image: ghcr.io/gallofrancesco04/saas-provisioning:latest
     container_name: saas-provisioning
     depends_on:
       mssql-server:
@@ -139,10 +130,7 @@ services:
       Kafka__BootstrapServers: "kafka:9092"
 
   saas-notification:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.Notification
-    image: saas-notification:latest
+    image: ghcr.io/gallofrancesco04/saas-notification:latest
     container_name: saas-notification
     depends_on:
       mssql-server:
