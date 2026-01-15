@@ -1,0 +1,55 @@
+name: Publish Docker Images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "microservices/**"
+      - "docker/**"
+      - ".github/workflows/docker-publish.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: orchestrator
+            dockerfile: docker/Dockerfile.Orchestrator
+          - service: billing
+            dockerfile: docker/Dockerfile.Billing
+          - service: provisioning
+            dockerfile: docker/Dockerfile.Provisioning
+          - service: notification
+            dockerfile: docker/Dockerfile.Notification
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image name
+        run: echo "IMAGE=ghcr.io/${{ github.repository_owner }}/saas-${{ matrix.service }}" >> $GITHUB_ENV
+
+      - name: Build and push image
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            -t $IMAGE:latest \
+            -t $IMAGE:${{ github.sha }} \
+            -f ${{ matrix.dockerfile }} .
