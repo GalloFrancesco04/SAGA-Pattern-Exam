@@ -76,12 +76,45 @@ services:
       "
     restart: "no"
 
+  sql-init:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sql-init
+    depends_on:
+      mssql-server:
+        condition: service_healthy
+    volumes:
+      - ../sql:/sql:ro
+    entrypoint: ['/bin/bash', '-c']
+    command: |
+      "
+      echo 'Waiting for SQL Server to be ready...'
+      sleep 5
+      
+      echo 'Creating databases and applying migrations...'
+      /opt/mssql-tools18/bin/sqlcmd -S mssql-server -U sa -P 'p4ssw0rD' -C -Q 'CREATE DATABASE SaaS_Orchestrator;'
+      /opt/mssql-tools18/bin/sqlcmd -S mssql-server -U sa -P 'p4ssw0rD' -C -Q 'CREATE DATABASE SaaS_Billing;'
+      /opt/mssql-tools18/bin/sqlcmd -S mssql-server -U sa -P 'p4ssw0rD' -C -Q 'CREATE DATABASE SaaS_Provisioning;'
+      /opt/mssql-tools18/bin/sqlcmd -S mssql-server -U sa -P 'p4ssw0rD' -C -Q 'CREATE DATABASE SaaS_Notification;'
+      
+      echo 'Applying SQL migrations...'
+      /opt/mssql-tools18/bin/sqlcmd -S mssql-server -U sa -P 'p4ssw0rD' -C -d SaaS_Orchestrator -i /sql/01-OrchestratorDb.sql
+      /opt/mssql-tools18/bin/sqlcmd -S mssql-server -U sa -P 'p4ssw0rD' -C -d SaaS_Billing -i /sql/02-BillingDb.sql
+      /opt/mssql-tools18/bin/sqlcmd -S mssql-server -U sa -P 'p4ssw0rD' -C -d SaaS_Provisioning -i /sql/03-ProvisioningDb.sql
+      /opt/mssql-tools18/bin/sqlcmd -S mssql-server -U sa -P 'p4ssw0rD' -C -d SaaS_Notification -i /sql/04-NotificationDb.sql
+      
+      echo 'Setup completed successfully!'
+      /opt/mssql-tools18/bin/sqlcmd -S mssql-server -U sa -P 'p4ssw0rD' -C -Q 'SELECT name FROM sys.databases;'
+      "
+    restart: "no"
+
   saas-orchestrator:
     image: ghcr.io/gallofrancesco04/saas-orchestrator:latest
     container_name: saas-orchestrator
     depends_on:
       mssql-server:
         condition: service_healthy
+      sql-init:
+        condition: service_completed_successfully
       kafka-init:
         condition: service_completed_successfully
     ports:
@@ -101,6 +134,8 @@ services:
     depends_on:
       mssql-server:
         condition: service_healthy
+      sql-init:
+        condition: service_completed_successfully
       kafka-init:
         condition: service_completed_successfully
     ports:
@@ -118,6 +153,8 @@ services:
     depends_on:
       mssql-server:
         condition: service_healthy
+      sql-init:
+        condition: service_completed_successfully
       kafka-init:
         condition: service_completed_successfully
     ports:
@@ -135,6 +172,8 @@ services:
     depends_on:
       mssql-server:
         condition: service_healthy
+      sql-init:
+        condition: service_completed_successfully
       kafka-init:
         condition: service_completed_successfully
     ports:
