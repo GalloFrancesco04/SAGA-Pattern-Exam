@@ -2,11 +2,11 @@ name: Publish Docker Images
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'microservices/**'
-      - 'docker/**'
-      - '.github/workflows/docker-publish.yml'
+      - "microservices/**"
+      - "docker/**"
+      - ".github/workflows/docker-publish.yml"
   workflow_dispatch:
 
 permissions:
