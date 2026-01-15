@@ -42,8 +42,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set image name
-        run: echo "IMAGE=ghcr.io/${{ github.repository_owner }}/saas-${{ matrix.service }}" >> $GITHUB_ENV
+      - name: Set image name (lowercase owner)
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE=ghcr.io/${OWNER}/saas-${{ matrix.service }}" >> $GITHUB_ENV
 
       - name: Build and push image
         run: |
