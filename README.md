@@ -13,7 +13,7 @@ This project implements the SAGA pattern using 3 main microservices (Billing, Pr
 
    > All databases, tables, and Kafka topics are created automatically.
 
-2. Access the APIs via Swagger or Postman:
+2. Access the APIs via Swagger:
    - Orchestrator: http://localhost:5013/swagger
    - Billing: http://localhost:5037/swagger
    - Provisioning: http://localhost:5148/swagger
